@@ -66,6 +66,9 @@ public class GamePanel extends JPanel implements Runnable{
                 if(vaildMove){
                     copyList(simPieces,pieces);
                     currentPiece.updatePosition();
+                    if(castle!=null){
+                        castle.updatePosition();
+                    }
                     changePlay();
                 }else {
                     copyList(pieces,simPieces);
