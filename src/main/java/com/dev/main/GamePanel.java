@@ -91,6 +91,11 @@ public class GamePanel extends JPanel implements Runnable{
         vaildMove=false;
 
         copyList(pieces,simPieces);
+        if(castle!=null){
+            castle.col= castle.preCol;
+            castle.x=castle.getX(castle.col);
+            castle=null;
+        }
 
 
         currentPiece.x=mouse.x-Board.P_HALF_SIZE;
@@ -104,7 +109,19 @@ public class GamePanel extends JPanel implements Runnable{
             if(currentPiece.hittingP!=null){
                 simPieces.remove(currentPiece.hittingP.getIndex());
             }
+            checkCastling();
             vaildMove=true;
+        }
+    }
+
+    public void checkCastling(){
+        if(castle!=null){
+            if(castle.col==0){
+                castle.col+=3;
+            }else if (castle.col==7){
+                castle.col-=2;
+            }
+            castle.x=castle.getX(castle.col);
         }
     }
 

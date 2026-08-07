@@ -39,10 +39,10 @@ public abstract class Piece {
         return image1;
     }
 
-    private int getX(int col){
+    public int getX(int col){
         return col* Board.P_SIZE;
     }
-    private int getY(int row){
+    public int getY(int row){
         return row*Board.P_SIZE;
     }
 
