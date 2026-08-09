@@ -24,9 +24,9 @@ public class King extends Piece{
             }
 
             if (moved == false) {
-                if(tarCol-2==preCol&&tarRow==preRow&&!pieceIsOnStraightLine(tarCol,tarRow)){
+                if(tarCol-2==preCol&&tarRow==preRow&&!pieceIsOnStraightLine(tarCol,tarRow)&&getHitting(preCol+2,preRow)==null){
                     for (Piece p: GamePanel.simPieces){
-                        if(p.col==preCol+3&&p.row==preRow&&p.moved==false){
+                        if(p.col==preCol+3&&p.row==preRow&&p.moved==false&&this.hittingP==null){
                             GamePanel.castle=p;
                             return true;
                         }
@@ -35,17 +35,10 @@ public class King extends Piece{
             }
 
             if (moved == false) {
-                if(tarCol+2==preCol&&tarRow==preRow&&!pieceIsOnStraightLine(tarCol,tarRow)){
-                    Piece[] ps=new Piece[2];
+                if(tarCol+2==preCol&&tarRow==preRow&&!pieceIsOnStraightLine(tarCol,tarRow)&&getHitting(preCol-2,preRow)==null&&getHitting(preCol-3,preRow)==null){
                     for (Piece p: GamePanel.simPieces){
-                        if(p.col==preCol-3&&p.row==preRow){
-                            ps[0]=p;
-                        }
-                        if(p.col==preCol-4&&p.row==preRow){
-                            ps[1]=p;
-                        }
-                        if(ps[0]==null&&ps[1]!=null&&ps[1].moved==false){
-                            GamePanel.castle=ps[1];
+                        if(p.col==preCol-4&&p.row==preRow&&p.moved==false){
+                            GamePanel.castle=p;
                             return true;
                         }
                     }
