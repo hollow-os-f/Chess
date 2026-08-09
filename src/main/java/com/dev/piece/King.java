@@ -1,12 +1,14 @@
 package com.dev.piece;
 
 import com.dev.main.GamePanel;
+import com.dev.main.Type;
 
 import static com.dev.main.GamePanel.w;
 
 public class King extends Piece{
     public King(int col, int row, int color) {
         super(col, row, color);
+        type= Type.King;
         if(color== w){
             image=getImage("/piece/w-king");
         }else {

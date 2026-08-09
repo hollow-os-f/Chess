@@ -5,6 +5,7 @@ import com.dev.piece.*;
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.List;
 
 public class GamePanel extends JPanel implements Runnable{
     public static final int WIDTH=1100;
@@ -14,6 +15,9 @@ public class GamePanel extends JPanel implements Runnable{
     public boolean vaildMove;
 
     public static final int FPS=60;
+
+    List<Piece> promotions=new ArrayList<>();
+    boolean promo=false;
 
     public Thread gameThead;
 
@@ -37,10 +41,32 @@ public class GamePanel extends JPanel implements Runnable{
         this.addMouseListener(mouse);
         this.addMouseMotionListener(mouse);
 
-        setPieces();
+        //setPieces();
+        test();
 
         copyList(pieces,simPieces);
     }
+
+    void test(){
+        pieces.add(new Pawn(0,5,w));
+        pieces.add(new Pawn(5,5,b));
+    }
+
+    public boolean canPromo(){
+        if (currentPiece.type == Type.Pawn) {
+            if ((currentColor == w && currentPiece.row == 0) ||( currentColor == b && currentPiece.row == 7)) {
+                promotions.clear();
+                promotions.add(new Queen(9,2,currentColor));
+                promotions.add(new Bishop(9,3,currentColor));
+                promotions.add(new Knight(9,4,currentColor));
+                promotions.add(new Rook(9,5,currentColor));
+                return true;
+            }
+        }
+        return false;
+    }
+
+
 
     public void launchGame(){
         gameThead=new Thread(this);
@@ -48,43 +74,84 @@ public class GamePanel extends JPanel implements Runnable{
     }
 
     public void update(){
-        if(mouse.press){
-            if(currentPiece==null){
-                for(Piece i:simPieces){
-                    if(currentColor==i.color
-                    &&mouse.x/Board.P_SIZE==i.col
-                    &&mouse.y/Board.P_SIZE==i.row){
-                        currentPiece=i;
-                        break;
+        if(promo){
+            promote();
+        }else {
+            if(mouse.press){
+                if(currentPiece==null){
+                    for(Piece i:simPieces){
+                        if(currentColor==i.color
+                                &&mouse.x/Board.P_SIZE==i.col
+                                &&mouse.y/Board.P_SIZE==i.row){
+                            currentPiece=i;
+                            break;
+                        }
                     }
+                }else {
+                    stimulate();
                 }
             }else {
-                stimulate();
-            }
-        }else {
-            if(currentPiece!=null){
-                if(vaildMove){
-                    copyList(simPieces,pieces);
-                    currentPiece.updatePosition();
-                    if(castle!=null){
-                        castle.updatePosition();
+                if(currentPiece!=null){
+                    if(vaildMove){
+                        copyList(simPieces,pieces);
+                        currentPiece.updatePosition();
+                        if(castle!=null){
+                            castle.updatePosition();
+                        }
+                        if(canPromo()){
+                            promo=true;
+                        }else {
+                            changePlay();
+                            currentPiece=null;
+                        }
+                    }else {
+                        copyList(pieces,simPieces);
+                        currentPiece.resetPosition();
+                        currentPiece=null;
                     }
-                    changePlay();
-                }else {
-                    copyList(pieces,simPieces);
-                    currentPiece.resetPosition();
+
                 }
-                currentPiece=null;
             }
         }
 
     }
 
+    private void promote() {
+        if(mouse.press)
+        {
+            for(Piece p:promotions){
+                if(p.col==mouse.x/Board.P_SIZE&&p.row==mouse.y/Board.P_SIZE){
+                    switch (p.type){
+                        case Rook -> simPieces.add(new Rook(currentPiece.col,currentPiece.row,currentColor));
+                        case Bishop -> simPieces.add(new Bishop(currentPiece.col,currentPiece.row,currentColor));
+                        case Knight -> simPieces.add(new Knight(currentPiece.col,currentPiece.row,currentColor));
+                        case Queen -> simPieces.add(new Queen(currentPiece.col,currentPiece.row,currentColor));
+                    }
+                    simPieces.remove(currentPiece.getIndex());
+                    copyList(simPieces,pieces);
+                    currentPiece=null;
+                    promo=false;
+                    changePlay();
+                }
+            }
+        }
+    }
+
     public void changePlay(){
         if(currentColor==w){
             currentColor=b;
+            for (Piece p:simPieces){
+                if(p.color==b){
+                    p.twoStep=false;
+                }
+            }
         }else {
             currentColor=w;
+            for (Piece p:simPieces){
+                if(p.color==w){
+                    p.twoStep=false;
+                }
+            }
         }
         currentPiece=null;
     }
@@ -200,17 +267,25 @@ public class GamePanel extends JPanel implements Runnable{
         g2.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
         g2.setColor(Color.WHITE);
         g2.setFont(new Font("Book Antiqua",Font.PLAIN,40));
-        if(currentColor==w){
-            g2.drawString("White turning",830,550);
+
+        if(promo){
+            g2.drawString("Promote to",840,150);
+            for (Piece p:promotions){
+                g2.drawImage(p.image,p.getX(p.col),p.getY(p.row),Board.P_SIZE,Board.P_SIZE,null);
+            }
         }else {
-            g2.drawString("Black turning",830,250);
+            if(currentColor==w){
+                g2.drawString("White turning",830,550);
+            }else {
+                g2.drawString("Black turning",830,250);
+            }
         }
     }
 
 
     @Override
     public void run() {
-        double inv=1000000000/FPS;
+        double inv=1000000000.0/FPS;
         long currentTime;
         long lastTime=System.nanoTime();
         double delta=0;

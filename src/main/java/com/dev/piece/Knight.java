@@ -1,10 +1,13 @@
 package com.dev.piece;
 
+import com.dev.main.Type;
+
 import static com.dev.main.GamePanel.w;
 
 public class Knight extends Piece{
     public Knight(int col, int row, int color) {
         super(col, row, color);
+        type= Type.Knight;
         if(color== w){
             image=getImage("/piece/w-knight");
         }else {

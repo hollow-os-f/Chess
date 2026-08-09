@@ -2,6 +2,7 @@ package com.dev.piece;
 
 import com.dev.main.Board;
 import com.dev.main.GamePanel;
+import com.dev.main.Type;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
@@ -9,12 +10,14 @@ import java.awt.image.BufferedImage;
 import java.io.IOException;
 
 public abstract class Piece {
+
+    public Type type;
     public BufferedImage image;
     public int x,y;
     public int col,row,preCol,preRow;
     public int color;
     public Piece hittingP;
-    public boolean moved;
+    public boolean moved,twoStep;
 
 
 
@@ -67,6 +70,11 @@ public abstract class Piece {
     }
 
     public void updatePosition(){
+        if(type==Type.Pawn){
+            if(Math.abs(row-preRow)==2){
+                twoStep=true;
+            }
+        }
         x=getX(col);
         y=getY(row);
         preCol=getCol(x);
