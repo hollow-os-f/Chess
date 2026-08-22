@@ -23,7 +23,7 @@ public class Queen extends Piece{
                     return true;
                 }
             }
-            if(preCol==col||preRow==row){
+            if(tarCol==preCol||tarRow==preRow){
                 if(vaildHitting(tarCol,tarRow)&&!pieceIsOnStraightLine(tarCol,tarRow)){
                     return true;
                 }

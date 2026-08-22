@@ -14,7 +14,7 @@ public class GamePanel extends JPanel implements Runnable{
 
     public boolean canMove;
     public boolean vaildMove;
-    public boolean gameOver;
+    public boolean gameOver=false;
 
     public static final int FPS=60;
 
@@ -33,6 +33,8 @@ public class GamePanel extends JPanel implements Runnable{
     public Piece currentPiece,checkPiece;
     public static Piece castle;
 
+    boolean statemate=false;
+
     public static final int w=1;
     public static final int b=0;
     public int currentColor=w;
@@ -43,15 +45,22 @@ public class GamePanel extends JPanel implements Runnable{
         this.addMouseListener(mouse);
         this.addMouseMotionListener(mouse);
 
-        setPieces();
-        //test();
+        //setPieces();
+        test();
 
         copyList(pieces,simPieces);
     }
 
     void test(){
-        pieces.add(new Pawn(0,5,w));
-        pieces.add(new Pawn(5,5,b));
+        //逼和（和棋）测试局面：白后走到 c7 即形成逼和
+        pieces.clear();
+
+        //白方：后在 c2，王在 e1
+        pieces.add(new Queen(2,6,w));
+        pieces.add(new King(4,7,w));
+
+        //黑方：只剩一个王在 a8，被逼进角落
+        pieces.add(new King(0,0,b));
     }
 
     public boolean isIllegal(Piece king){
@@ -122,7 +131,7 @@ public class GamePanel extends JPanel implements Runnable{
     public void update(){
         if(promo){
             promote();
-        }else {
+        }else if(gameOver==false&&statemate==false) {
             if(mouse.press){
                 if(currentPiece==null){
                     for(Piece i:simPieces){
@@ -144,15 +153,20 @@ public class GamePanel extends JPanel implements Runnable{
                         if(castle!=null){
                             castle.updatePosition();
                         }
-                        if(isKingInCheck()){
+                        if(isKingInCheck()&&isCheckmate()){
+                            gameOver=true;
+                        }else if(isStalemate()&&!isKingInCheck()){
+                            statemate=true;
+                        }
+                        else {
+                            if(canPromo()){
+                                promo=true;
+                            }else {
+                                changePlay();
+                                currentPiece=null;
+                            }
+                        }
 
-                        }
-                        if(canPromo()){
-                            promo=true;
-                        }else {
-                            changePlay();
-                            currentPiece=null;
-                        }
                     }else {
                         copyList(pieces,simPieces);
                         currentPiece.resetPosition();
@@ -291,11 +305,172 @@ public class GamePanel extends JPanel implements Runnable{
         pieces.add(new Bishop(5,0,b));
         pieces.add(new Queen(3,0,b));
         pieces.add(new King(4,0,b));
+    }
+
+    public boolean isCheckmate(){
+        Piece king=getKing(true);
+
+        if (kingCanMove(king)){
+            return false;
+        }else {
+            int colDiff=Math.abs(checkPiece.col-king.col);
+            int rowDiff=Math.abs(checkPiece.row-king.row);
+
+            if(colDiff==0){
+                if (checkPiece.row < king.row) {
+                    for (int r=checkPiece.row;r<king.row;r++){
+                        for (Piece p:simPieces){
+                            if(p!=king&&p.color!=currentColor&&p.canMove(checkPiece.col,r)){
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                if (checkPiece.row > king.row) {
+                    for (int r=checkPiece.row;r>king.row;r--){
+                        for (Piece p:simPieces){
+                            if(p!=king&&p.color!=currentColor&&p.canMove(checkPiece.col,r)){
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+            }
+            else if(rowDiff==0){
+                if (checkPiece.col < king.col) {
+                    for (int r=checkPiece.col;r<king.col;r++){
+                        for (Piece p:simPieces){
+                            if(p!=king&&p.color!=currentColor&&p.canMove(r,checkPiece.row)){
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+                if (checkPiece.col > king.col) {
+                    for (int r=checkPiece.col;r>king.col;r--){
+                        for (Piece p:simPieces){
+                            if(p!=king&&p.color!=currentColor&&p.canMove(r,checkPiece.row)){
+                                return false;
+                            }
+                        }
+                    }
+                }
+            }else if (colDiff==rowDiff){
+                if(checkPiece.row<king.row){
+                    if (checkPiece.col<king.col){
+                        for (int c=checkPiece.col,r=checkPiece.row;c<king.col;c++,r++){
+                            for (Piece p:simPieces){
+                                if(p!=king&&p.color!=currentColor&&p.canMove(c,r)){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                    if(checkPiece.col>king.col){
+                        for (int c=checkPiece.col,r=checkPiece.row;c>king.col;c--,r++){
+                            for (Piece p:simPieces){
+                                if(p!=king&&p.color!=currentColor&&p.canMove(c,r)){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+
+                }
+
+                if(checkPiece.row>king.row){
+                    if (checkPiece.col<king.col){
+                        for (int c=checkPiece.col,r=checkPiece.row;c<king.col;c++,r--){
+                            for (Piece p:simPieces){
+                                if(p!=king&&p.color!=currentColor&&p.canMove(c,r)){
+                                    return false;
+                                }
+                            }
+                        }
+
+                    }
+                    if(checkPiece.col>king.col){
+                        for (int c=checkPiece.col,r=checkPiece.row;c>king.col;c--,r--){
+                            for (Piece p:simPieces){
+                                if(p!=king&&p.color!=currentColor&&p.canMove(c,r)){
+                                    return false;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
 
 
+        return true;
+    }
+
+    public boolean kingCanMove(Piece king){
+        if (isValidMove(king,1,0)){
+            return true;
+        }
+        if (isValidMove(king,-1,0)){
+            return true;
+        }
+        if (isValidMove(king,0,1)){
+            return true;
+        }
+        if (isValidMove(king,0,-1)){
+            return true;
+        }
+        if (isValidMove(king,1,1)){
+            return true;
+        }
+        if (isValidMove(king,1,-1)){
+            return true;
+        }
+        if (isValidMove(king,-1,1)){
+            return true;
+        }
+        if (isValidMove(king,-1,-1)){
+            return true;
+        }
+        return false;
+    }
+
+    public boolean isValidMove(Piece king ,int colPlus,int rowPlus){
+        boolean isValidMove=false;
+
+        king.col+=colPlus;
+        king.row+=rowPlus;
 
 
+        if(king.canMove(king.col,king.row)){
+            if(king.hittingP!=null){
+                simPieces.remove(king.hittingP.getIndex());
+            }
+            if(!isIllegal(king)){
+                isValidMove=true;
+            }
+        }
 
+        king.resetPosition();
+        copyList(pieces,simPieces);
+        return isValidMove;
+    }
+
+    public boolean isStalemate(){
+        int count=0;
+        for (Piece p:simPieces){
+            if(p.color!=currentColor){
+                count++;
+            }
+        }
+        if(count==1){
+            if(!kingCanMove(getKing(true))){
+                return true;
+            }
+        }
+        return false;
     }
 
     public void copyList(ArrayList<Piece> sou,ArrayList<Piece> tar){
@@ -358,6 +533,23 @@ public class GamePanel extends JPanel implements Runnable{
                     g2.drawString("is in check",840,150);
                 }
             }
+        }
+
+        if(gameOver==true){
+            String s="";
+            if(currentColor==w){
+                s="White Win";
+            }else {
+                s="Black Win";
+            }
+            g2.setFont(new Font("Arial",Font.PLAIN,90));
+            g2.setColor(Color.GREEN);
+            g2.drawString(s,200,240);
+        }
+        if(statemate){
+            g2.setFont(new Font("Arial",Font.PLAIN,90));
+            g2.setColor(Color.GRAY);
+            g2.drawString("Statlemate",200,500);
         }
     }
 
